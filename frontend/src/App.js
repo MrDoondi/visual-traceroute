@@ -4,16 +4,8 @@ import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
-import L from 'leaflet';
 
-// Fix Leaflet's default icon paths to use public folder
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: '/marker-icon-2x.png',
-  iconUrl: '/marker-icon.png',
-  shadowUrl: '/marker-shadow.png',
-});
-
+const API_BASE = process.env.REACT_APP_API_BASE || '';
 const MAP_CENTER = [20, 0];
 const MAP_ZOOM = 2;
 
@@ -28,16 +20,14 @@ function App() {
     setError('');
     setHops([]);
     try {
-      const res = await axios.get(`/traceroute?target=${encodeURIComponent(target)}`);
+      const res = await axios.get(`${API_BASE}/traceroute?target=${encodeURIComponent(target)}`);
       if (Array.isArray(res.data)) {
         setHops(res.data);
         if (!res.data.length) setError('No hops found.');
       } else if (res.data && res.data.error) {
         setError(res.data.error);
-        setHops([]);
       } else {
         setError('Unexpected response from server.');
-        setHops([]);
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch traceroute.');
@@ -46,7 +36,6 @@ function App() {
     }
   };
 
-  // Defensive: always use an array for mapping
   const safeHops = Array.isArray(hops) ? hops : [];
   const polylinePositions = safeHops.map(hop => [hop.lat, hop.lon]);
 
@@ -101,4 +90,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
